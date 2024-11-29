@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react' // 로그인 상태를 확인하는
 import RemoveBtn from '@/components/RemoveBtn'
 import Link from 'next/link'
 import { HiPencilAlt } from 'react-icons/hi'
+import Image from 'next/image' // next/image 임포트
 
 interface Topic {
   _id: string
@@ -73,13 +74,6 @@ export default function TopicDetailPage() {
   // 로그인한 사용자가 상품을 등록한 사람인지 확인
   const isOwner = userEmail === topic.userEmail
 
-  // 수정 버튼 클릭 시 상품 수정 페이지로 이동
-  const handleEdit = () => {
-    if (id) {
-      router.push(`/editTopic/${id}`) // 상품 수정 페이지로 이동
-    }
-  }
-
   // 이미지 클릭 시 모달 열기
   const handleImageClick = (image: string) => {
     setModalImage(image)
@@ -96,9 +90,11 @@ export default function TopicDetailPage() {
     <div className="container mx-auto my-8 max-w-4xl">
       <h2 className="text-3xl font-bold mb-4">{topic.title}</h2>
       <div className="mb-6">
-        <img
+        <Image
           src={topic.image || '/default-avatar.png'}
           alt={topic.title}
+          width={500} // 원하는 이미지 너비
+          height={320} // 원하는 이미지 높이
           className="w-full h-80 object-cover rounded-md cursor-pointer"
           onClick={() => handleImageClick(topic.image || '/default-avatar.png')} // 이미지 클릭 시 모달 열기
         />
@@ -131,9 +127,11 @@ export default function TopicDetailPage() {
             >
               X
             </button>
-            <img
+            <Image
               src={modalImage || '/default-avatar.png'}
               alt="Modal Image"
+              width={1000} // 모달 이미지 크기 조정
+              height={1000}
               className="w-full h-full object-contain"
             />
           </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
-import Link from 'next/link'
+
 import UserTopicList from '@/components/UserTopicList'
 
 interface Topic {
@@ -16,30 +16,6 @@ interface Topic {
 
 export default function DashboardPage() {
   const { data: session } = useSession()
-  const [userProducts, setUserProducts] = useState<Topic[]>([])
-
-  // 내가 등록한 상품 가져오기
-  useEffect(() => {
-    if (session) {
-      const fetchUserProducts = async () => {
-        const res = await fetch('/api/topics') // 서버에서 등록된 상품 목록 가져오기
-        const data = await res.json()
-
-        // data가 배열인지 확인
-        if (Array.isArray(data)) {
-          // 현재 로그인한 사용자 이메일과 일치하는 상품만 필터링
-          const filteredProducts = data.filter(
-            (product: Topic) => product.userEmail === session.user?.email
-          )
-          setUserProducts(filteredProducts) // 필터링된 상품 목록 상태에 저장
-        } else {
-          console.error('Received data is not an array:', data)
-        }
-      }
-
-      fetchUserProducts()
-    }
-  }, [session])
 
   if (!session) return <div>Loading...</div>
 

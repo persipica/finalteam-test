@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import Image from 'next/image' // next/image 임포트
 
 interface Topic {
   _id: string
@@ -150,7 +151,13 @@ export default function EditTopicPage() {
         </div>
         {topic.image && !image && (
           <div className="mt-4">
-            <img src={topic.image} alt="Current product" className="w-32" />
+            <Image
+              src={topic.image}
+              alt="Current product"
+              width={128} // 원하는 크기 설정
+              height={128}
+              className="w-32"
+            />
             <p>현재 이미지</p>
           </div>
         )}

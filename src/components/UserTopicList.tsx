@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react' // 로그인 상태 확인
-import RemoveBtn from './RemoveBtn'
+
 import Link from 'next/link'
-import { HiPencilAlt } from 'react-icons/hi'
+
 import Image from 'next/image'
 
 interface Topic {

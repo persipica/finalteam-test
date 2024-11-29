@@ -2,7 +2,7 @@
 
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface EditTopicFormProps {
@@ -18,7 +18,6 @@ const EditTopicForm: React.FC<EditTopicFormProps> = ({
   title,
   description,
   price,
-  imageUrl,
 }) => {
   const [newTitle, setNewTitle] = useState(title)
   const [newDescription, setNewDescription] = useState(description)
