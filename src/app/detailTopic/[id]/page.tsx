@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation' // Next.js 13+ 에서 URL 매개변수를 추출
+import { useParams } from 'next/navigation' // Next.js 13+ 에서 URL 매개변수를 추출
 import { useSession } from 'next-auth/react' // 로그인 상태를 확인하는 예시 (next-auth 사용)
 import RemoveBtn from '@/components/RemoveBtn'
 import Link from 'next/link'
@@ -27,7 +27,7 @@ export default function TopicDetailPage() {
 
   const { data: session } = useSession() // 세션에서 로그인한 사용자 정보 가져오기
   const userEmail = session?.user?.email // 로그인한 사용자의 이메일
-  const router = useRouter() // 페이지 이동을 위한 router
+  //const router = useRouter() // 페이지 이동을 위한 router
 
   useEffect(() => {
     if (!id) return
