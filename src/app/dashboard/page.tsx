@@ -1,18 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 
 import UserTopicList from '@/components/UserTopicList'
-
-interface Topic {
-  _id: string
-  title: string
-  description: string
-  price: number
-  image?: string
-  userEmail: string // 상품 등록한 사용자의 이메일
-}
 
 export default function DashboardPage() {
   const { data: session } = useSession()

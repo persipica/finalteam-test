@@ -19,7 +19,7 @@ export const GET = async (
     }
     return NextResponse.json(topic) // 상품 정보를 JSON으로 반환
   } catch (error) {
-    console.error()
+    console.error(error)
     return NextResponse.json(
       { message: '상품 정보 조회 중 오류 발생' },
       { status: 500 }
