@@ -1,12 +1,12 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useParams } from 'next/navigation' // Next.js 13+ 에서 URL 매개변수를 추출
-import { useSession } from 'next-auth/react' // 로그인 상태를 확인하는 예시 (next-auth 사용)
+import { useParams } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import RemoveBtn from '@/components/RemoveBtn'
 import Link from 'next/link'
 import { HiPencilAlt } from 'react-icons/hi'
-import Image from 'next/image' // next/image 임포트
+import Image from 'next/image'
 
 interface Topic {
   _id: string
@@ -14,20 +14,30 @@ interface Topic {
   description: string
   image?: string
   price: number
-  userEmail: string // 상품 등록자의 이메일
-  category: string // 카테고리 추가
+  userEmail: string
+  category: string
+}
+
+interface Comment {
+  _id: string
+  userEmail: string
+  content: string
+  createdAt: string
 }
 
 export default function TopicDetailPage() {
-  const params = useParams() // URL 매개변수를 추출
-  const id = Array.isArray(params?.id) ? params?.id[0] : params?.id // id가 배열일 경우 첫 번째 값을 사용
+  const params = useParams()
+  const id = Array.isArray(params?.id) ? params?.id[0] : params?.id
   const [topic, setTopic] = useState<Topic | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false) // 모달 상태
-  const [modalImage, setModalImage] = useState<string | null>(null) // 모달에 표시될 이미지
+  const [comments, setComments] = useState<Comment[]>([])
+  const [newComment, setNewComment] = useState('')
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null) // 수정할 댓글의 ID 저장
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalImage, setModalImage] = useState<string | null>(null)
 
-  const { data: session } = useSession() // 세션에서 로그인한 사용자 정보 가져오기
-  const userEmail = session?.user?.email // 로그인한 사용자의 이메일
+  const { data: session } = useSession()
+  const userEmail = session?.user?.email
 
   useEffect(() => {
     if (!id) return
@@ -39,18 +49,22 @@ export default function TopicDetailPage() {
         const data = await res.json()
         setTopic(data)
 
+        // 댓글 불러오기
+        const commentRes = await fetch(`/api/comments?topicId=${id}`)
+        if (!commentRes.ok) throw new Error('Failed to fetch comments')
+        const commentData = await commentRes.json()
+        setComments(commentData)
+
         // 방문한 상품 정보 로컬 스토리지에 저장
         const visitedProducts = JSON.parse(
           localStorage.getItem('visitedProducts') || '[]'
         )
 
-        // 중복 방문을 방지
         if (
           !visitedProducts.some((product: Topic) => product._id === data._id)
         ) {
-          // 최대 10개까지만 저장
           if (visitedProducts.length >= 10) {
-            visitedProducts.shift() // 첫 번째(오래된) 상품을 삭제
+            visitedProducts.shift()
           }
           visitedProducts.push(data)
           localStorage.setItem(
@@ -68,29 +82,100 @@ export default function TopicDetailPage() {
     fetchTopic()
   }, [id])
 
-  if (loading) return <div>Loading...</div>
-  if (!topic) return <div>상품을 찾을 수 없습니다.</div>
-
-  // 로그인한 사용자가 상품을 등록한 사람인지 확인
-  const isOwner = userEmail === topic.userEmail
-
-  // 이미지 클릭 시 모달 열기
   const handleImageClick = (image: string) => {
     setModalImage(image)
-    setIsModalOpen(true) // 모달 열기
+    setIsModalOpen(true)
   }
 
-  // 모달 닫기
   const closeModal = () => {
     setIsModalOpen(false)
     setModalImage(null)
   }
 
+  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNewComment(e.target.value)
+  }
+
+  const handleCommentSubmit = async () => {
+    if (!newComment.trim()) return
+
+    const newCommentData = {
+      content: newComment,
+      userEmail,
+      topicId: topic?._id,
+    }
+
+    try {
+      let res
+      if (editingCommentId) {
+        // 댓글 수정일 경우
+        res = await fetch(`/api/comments/${editingCommentId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newCommentData),
+        })
+      } else {
+        // 댓글 새로 작성일 경우
+        res = await fetch('/api/comments', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newCommentData),
+        })
+      }
+
+      if (res.ok) {
+        const data = await res.json()
+        setComments((prev) => {
+          if (editingCommentId) {
+            // 수정된 댓글이 있으면 그 댓글을 찾아서 덮어쓰기
+            return prev.map((comment) =>
+              comment._id === editingCommentId ? data : comment
+            )
+          }
+          return [data, ...prev] // 새 댓글은 맨 앞에 추가
+        })
+        setNewComment('') // 입력 필드 초기화
+        setEditingCommentId(null) // 수정 모드 해제
+      }
+    } catch (error) {
+      console.error('Error submitting comment:', error)
+    }
+  }
+
+  const handleCommentEdit = (commentId: string) => {
+    const commentToEdit = comments.find((c) => c._id === commentId)
+    if (commentToEdit) {
+      setNewComment(commentToEdit.content) // 댓글 내용을 수정하기 위해 입력 필드에 채움
+      setEditingCommentId(commentId) // 수정하려는 댓글의 ID 저장
+    }
+  }
+
+  const handleCommentDelete = async (commentId: string) => {
+    try {
+      const res = await fetch(`/api/comments/${commentId}`, {
+        method: 'DELETE',
+      })
+
+      if (res.ok) {
+        setComments((prev) => prev.filter((c) => c._id !== commentId)) // 댓글 삭제
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error)
+    }
+  }
+
+  if (loading) return <div>Loading...</div>
+  if (!topic) return <div>상품을 찾을 수 없습니다.</div>
+
+  const isOwner = userEmail === topic.userEmail
+
   return (
     <div className="container mx-auto my-8 max-w-4xl">
       <h2 className="text-3xl font-bold mb-4">{topic.title}</h2>
-
-      {/* 카테고리 표시 */}
       <p className="text-sm text-gray-500 mb-4">
         카테고리: <span className="font-semibold">{topic.category}</span>
       </p>
@@ -99,10 +184,10 @@ export default function TopicDetailPage() {
         <Image
           src={topic.image || '/default-avatar.png'}
           alt={topic.title}
-          width={500} // 원하는 이미지 너비
-          height={320} // 원하는 이미지 높이
+          width={500}
+          height={320}
           className="w-full h-80 object-cover rounded-md cursor-pointer"
-          onClick={() => handleImageClick(topic.image || '/default-avatar.png')} // 이미지 클릭 시 모달 열기
+          onClick={() => handleImageClick(topic.image || '/default-avatar.png')}
         />
       </div>
       <p className="text-lg text-gray-800 mb-6">{topic.description}</p>
@@ -123,20 +208,64 @@ export default function TopicDetailPage() {
         )}
       </div>
 
+      {/* 댓글 영역 */}
+      <div className="mt-8">
+        <h3 className="text-2xl font-semibold mb-4">댓글</h3>
+        <div className="space-y-4 max-h-64 overflow-y-auto">
+          {comments.map((comment) => (
+            <div key={comment._id} className="border-b pb-2">
+              <p className="text-gray-800">{comment.content}</p>
+              <p className="text-sm text-gray-500">{comment.userEmail}</p>
+              {comment.userEmail === userEmail && (
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => handleCommentEdit(comment._id)}
+                    className="text-blue-600"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={() => handleCommentDelete(comment._id)}
+                    className="text-red-600"
+                  >
+                    삭제
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* 댓글 작성 */}
+        <textarea
+          value={newComment}
+          onChange={handleCommentChange}
+          placeholder="댓글을 작성하세요"
+          rows={3}
+          className="w-full border p-2 rounded-md mt-4"
+        />
+        <button
+          onClick={handleCommentSubmit}
+          className="bg-blue-600 text-white py-2 px-4 rounded-md mt-2"
+        >
+          댓글 {editingCommentId ? '수정' : '작성'}
+        </button>
+      </div>
+
       {/* 모달 */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
           <div className="relative w-full h-full">
             <button
               className="absolute top-0 right-0 p-4 text-white bg-red-600 rounded-full"
-              onClick={closeModal} // 모달 닫기
+              onClick={closeModal}
             >
               X
             </button>
             <Image
               src={modalImage || '/default-avatar.png'}
               alt="Modal Image"
-              width={1000} // 모달 이미지 크기 조정
+              width={1000}
               height={1000}
               className="w-full h-full object-contain"
             />
