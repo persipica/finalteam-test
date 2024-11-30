@@ -22,6 +22,7 @@ export default function TopicLists() {
 
   const [selectedCategory, setSelectedCategory] = useState<string>('') // 선택된 카테고리
   const [priceSortOrder, setPriceSortOrder] = useState<string>('asc') // 가격 정렬 순서 (asc 또는 desc)
+  const [dateSortOrder, setDateSortOrder] = useState<string>('desc') // 최신순/오래된순 정렬
 
   useEffect(() => {
     async function fetchTopics() {
@@ -51,10 +52,18 @@ export default function TopicLists() {
       return true
     })
     .sort((a, b) => {
+      // 가격 순 정렬
       if (priceSortOrder === 'asc') {
         return a.price - b.price
-      } else {
+      } else if (priceSortOrder === 'desc') {
         return b.price - a.price
+      }
+
+      // 날짜 순 정렬
+      if (dateSortOrder === 'desc') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      } else {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
       }
     })
 
@@ -97,6 +106,21 @@ export default function TopicLists() {
           >
             <option value="asc">가격 낮은순</option>
             <option value="desc">가격 높은순</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="dateSort" className="mr-2">
+            날짜 순:
+          </label>
+          <select
+            id="dateSort"
+            value={dateSortOrder}
+            onChange={(e) => setDateSortOrder(e.target.value)}
+            className="border border-gray-300 rounded-md p-2"
+          >
+            <option value="desc">최신순</option>
+            <option value="asc">오래된순</option>
           </select>
         </div>
       </div>
