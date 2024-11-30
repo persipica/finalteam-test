@@ -7,6 +7,7 @@ interface ITopic {
   price: number
   image?: string
   userEmail: string // 상품을 올린 사용자의 이메일 추가
+  category: string // 카테고리 추가
 }
 
 const topicSchema = new Schema<ITopic>({
@@ -15,6 +16,10 @@ const topicSchema = new Schema<ITopic>({
   price: { type: Number, required: true },
   image: { type: String },
   userEmail: { type: String, required: true }, // 상품 등록자의 이메일
+  category: {
+    type: String,
+    required: true,
+  },
 })
 
 let Topic: Model<ITopic>

@@ -11,9 +11,13 @@ export default function RemoveBtn({ id }: { id: string }) {
   if (!id) return null
 
   async function removeTopic() {
-    const confirmed = confirm(`Are you sure to delete the topic of ${id}?`)
+    const confirmed = confirm(
+      `Are you sure you want to delete the topic with ID: ${id}?`
+    )
     if (confirmed) {
-      const res = await fetch(`/api/topics?id=${id}`, { method: 'DELETE' })
+      // 수정된 API 엔드포인트로 DELETE 요청
+      const res = await fetch(`/api/topics/${id}`, { method: 'DELETE' })
+
       if (res.ok) {
         alert('상품이 삭제되었습니다.')
         router.push('/') // 메인 페이지로 리다이렉트

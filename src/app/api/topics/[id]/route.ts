@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { NextRequest, NextResponse } from 'next/server'
 import Topic from '@/models/topic'
 import fs from 'fs'
@@ -39,10 +37,11 @@ export const PUT = async (
     const price = formData.get('price')
       ? Number(formData.get('price'))
       : undefined
+    const category = formData.get('category')?.toString() // 카테고리 추가
     const newImage = formData.get('newImage') as File | null
     const oldImage = formData.get('oldImage')?.toString()
 
-    const updatedData: any = { title, description, price }
+    const updatedData: any = { title, description, price, category } // 카테고리 포함
 
     // 새 이미지를 업로드할 경우
     if (newImage) {
@@ -90,6 +89,48 @@ export const PUT = async (
     console.error('상품 수정 중 오류 발생:', error)
     return NextResponse.json(
       { message: '상품 수정 중 오류 발생' },
+      { status: 500 }
+    )
+  }
+}
+
+export const DELETE = async (
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) => {
+  try {
+    // 상품 조회
+    const topic = await Topic.findById(params.id)
+    if (!topic) {
+      return NextResponse.json(
+        { message: '상품을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    // 이미지 파일 삭제 (이미지 경로가 있을 경우)
+    if (topic.image) {
+      const imagePath = path.join(
+        process.cwd(),
+        'public',
+        topic.image.replace('/uploads/', '')
+      )
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath) // 파일 삭제
+      }
+    }
+
+    // 상품 삭제
+    await Topic.findByIdAndDelete(params.id)
+
+    return NextResponse.json(
+      { message: '상품이 삭제되었습니다.' },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error('상품 삭제 중 오류 발생:', error)
+    return NextResponse.json(
+      { message: '상품 삭제 중 오류 발생' },
       { status: 500 }
     )
   }

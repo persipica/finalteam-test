@@ -10,6 +10,7 @@ interface Topic {
   description: string
   image?: string
   price: number
+  category: string // 카테고리 추가
 }
 
 export default function EditTopicPage() {
@@ -62,6 +63,7 @@ export default function EditTopicPage() {
     formData.append('title', topic.title)
     formData.append('description', topic.description)
     formData.append('price', topic.price.toString())
+    formData.append('category', topic.category) // 카테고리 값 추가
 
     // 기존 이미지를 삭제하고 새로운 이미지가 있다면 업로드
     if (topic.image) {
@@ -134,6 +136,28 @@ export default function EditTopicPage() {
             required
           />
         </div>
+
+        {/* 카테고리 선택 */}
+        <div className="mb-4">
+          <label htmlFor="category" className="block text-gray-700">
+            카테고리
+          </label>
+          <select
+            id="category"
+            className="w-full border border-gray-300 rounded-md p-2"
+            value={topic.category}
+            onChange={(e) => setTopic({ ...topic, category: e.target.value })}
+            required
+          >
+            <option value="가전제품">가전제품</option>
+            <option value="문구(완구)">문구(완구)</option>
+            <option value="장난감">장난감</option>
+            <option value="생필품">생필품</option>
+            <option value="가구">가구</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+
         <div>
           <label
             htmlFor="image"

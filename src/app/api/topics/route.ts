@@ -11,7 +11,18 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true })
 }
 
+// 허용된 이미지 타입
 const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+
+// 가능한 카테고리 값들
+const validCategories = [
+  '가전제품',
+  '문구(완구)',
+  '장난감',
+  '생필품',
+  '가구',
+  '기타',
+]
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,13 +30,25 @@ export async function POST(request: NextRequest) {
     const title = formData.get('title')?.toString()
     const description = formData.get('description')?.toString()
     const price = formData.get('price')?.toString()
+    const category = formData.get('category')?.toString() // 카테고리 추가
     const image = formData.get('image') as File | null
     const userEmail = formData.get('userEmail')?.toString() // 로그인한 사용자의 이메일
 
     // 유효성 검사
-    if (!title || !description || !price || !image || !userEmail) {
+    if (!title || !description || !price || !image || !category || !userEmail) {
       return NextResponse.json(
-        { message: '상품명, 설명, 가격, 이미지, 이메일은 모두 필수입니다.' },
+        {
+          message:
+            '상품명, 설명, 가격, 이미지, 카테고리, 이메일은 모두 필수입니다.',
+        },
+        { status: 400 }
+      )
+    }
+
+    // 카테고리 유효성 검사
+    if (!validCategories.includes(category)) {
+      return NextResponse.json(
+        { message: '유효한 카테고리 값을 선택해 주세요.' },
         { status: 400 }
       )
     }
@@ -60,6 +83,7 @@ export async function POST(request: NextRequest) {
       title,
       description,
       price: parsedPrice,
+      category, // 카테고리 저장
       image: imageUrl, // 저장된 이미지의 경로
       userEmail, // 사용자의 이메일 추가
     })
@@ -77,39 +101,20 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    // MongoDB 연결
     await connectMongoDB()
-    const topics = await Topic.find().sort({ createdAt: -1 }) // 최신 순 정렬
-    return NextResponse.json({ topics })
+
+    // 모든 Topic 조회
+    const topics = await Topic.find()
+
+    // 정상적으로 조회한 데이터를 응답
+    return NextResponse.json({ topics }, { status: 200 })
   } catch (error) {
     console.error('Error in GET /api/topics:', error)
     return NextResponse.json(
       { message: 'Internal server error in GET' },
-      { status: 500 }
-    )
-  }
-}
-
-export async function DELETE(request: NextRequest) {
-  try {
-    const id = request.nextUrl.searchParams.get('id')
-    if (!id) {
-      return NextResponse.json({ message: 'ID is required' }, { status: 400 })
-    }
-
-    await connectMongoDB()
-    const deletedTopic = await Topic.findByIdAndDelete(id)
-
-    if (!deletedTopic) {
-      return NextResponse.json({ message: 'Topic not found' }, { status: 404 })
-    }
-
-    return NextResponse.json({ message: 'Topic deleted' }, { status: 200 })
-  } catch (error) {
-    console.error('Error in DELETE /api/topics:', error)
-    return NextResponse.json(
-      { message: 'Internal server error in DELETE' },
       { status: 500 }
     )
   }

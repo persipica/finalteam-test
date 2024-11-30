@@ -16,6 +16,7 @@ export default function AddTopicPage() {
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState<number | string>('') // 상품 가격 상태
   const [image, setImage] = useState<File | null>(null)
+  const [category, setCategory] = useState('') // 카테고리 상태
   const [loading, setLoading] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -27,8 +28,8 @@ export default function AddTopicPage() {
     e.preventDefault()
 
     // 유효성 검사
-    if (!title || !description || !price || !image) {
-      alert('상품명, 가격, 설명, 이미지가 모두 필요합니다.')
+    if (!title || !description || !price || !image || !category) {
+      alert('상품명, 가격, 설명, 이미지, 카테고리가 모두 필요합니다.')
       return
     }
 
@@ -38,6 +39,7 @@ export default function AddTopicPage() {
     formData.append('description', description)
     formData.append('price', price.toString()) // 가격은 문자열로 저장
     formData.append('image', image)
+    formData.append('category', category) // 카테고리 추가
 
     // 로그인한 사용자의 이메일을 함께 추가
     const userEmail = session?.user?.email || ''
@@ -45,6 +47,7 @@ export default function AddTopicPage() {
 
     // 디버깅: FormData에 어떤 값들이 들어가 있는지 확인
     console.log('FormData userEmail:', userEmail)
+    console.log('FormData category:', category)
 
     try {
       const res = await fetch('/api/topics', {
@@ -99,6 +102,23 @@ export default function AddTopicPage() {
             setPrice(e.target.value)
           }
         />
+
+        {/* 카테고리 선택 */}
+        <select
+          className="border border-slate-300 p-3 rounded-md"
+          value={category}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            setCategory(e.target.value)
+          }
+        >
+          <option value="">카테고리 선택</option>
+          <option value="가전제품">가전제품</option>
+          <option value="문구(완구)">문구(완구)</option>
+          <option value="장난감">장난감</option>
+          <option value="생필품">생필품</option>
+          <option value="가구">가구</option>
+          <option value="기타">기타</option>
+        </select>
 
         {/* 상품 이미지 업로드 */}
         <div>
