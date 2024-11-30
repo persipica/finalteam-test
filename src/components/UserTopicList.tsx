@@ -16,6 +16,7 @@ interface Topic {
   image?: string // 상품 이미지를 추가할 수 있도록 필드 확장
   price: number
   userEmail: string // 상품 등록한 사용자의 이메일 추가
+  category: string // 카테고리 필드 추가
 }
 
 export default function TopicLists() {
@@ -79,6 +80,8 @@ export default function TopicLists() {
             <p className="text-sm text-gray-600 mt-2 truncate">
               {topic.description}
             </p>
+            {/* 카테고리 표시 */}
+            <p className="text-sm text-gray-500 mt-2">{topic.category}</p>
             <h3 className="text-lg font-bold text-gray-800 truncate mt-4">
               {topic.price}원
             </h3>

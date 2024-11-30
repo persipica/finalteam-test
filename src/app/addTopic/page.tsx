@@ -117,7 +117,7 @@ export default function AddTopicPage() {
           <option value="장난감">장난감</option>
           <option value="생필품">생필품</option>
           <option value="가구">가구</option>
-          <option value="etc">기타</option>
+          <option value="기타">기타</option>
         </select>
 
         {/* 상품 이미지 업로드 */}
