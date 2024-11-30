@@ -1,4 +1,3 @@
-// src/models/comment.ts
 import mongoose, { Schema, Model } from 'mongoose'
 
 interface IComment {

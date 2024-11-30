@@ -23,6 +23,7 @@ interface Comment {
   userEmail: string
   content: string
   createdAt: string
+  isSeller: string
 }
 
 export default function TopicDetailPage() {
@@ -32,7 +33,7 @@ export default function TopicDetailPage() {
   const [loading, setLoading] = useState(true)
   const [comments, setComments] = useState<Comment[]>([])
   const [newComment, setNewComment] = useState('')
-  const [editingCommentId, setEditingCommentId] = useState<string | null>(null) // 수정할 댓글의 ID 저장
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalImage, setModalImage] = useState<string | null>(null)
 
@@ -52,8 +53,13 @@ export default function TopicDetailPage() {
         // 댓글 불러오기
         const commentRes = await fetch(`/api/comments?topicId=${id}`)
         if (!commentRes.ok) throw new Error('Failed to fetch comments')
-        const commentData = await commentRes.json()
-        setComments(commentData)
+        const { comments, sellerEmail } = await commentRes.json() // 판매자 이메일도 가져옴
+        setComments(
+          comments.map((comment: Comment) => ({
+            ...comment,
+            isSeller: comment.userEmail === sellerEmail, // 댓글 작성자가 판매자인지 확인
+          }))
+        )
 
         // 방문한 상품 정보 로컬 스토리지에 저장
         const visitedProducts = JSON.parse(
@@ -108,7 +114,6 @@ export default function TopicDetailPage() {
     try {
       let res
       if (editingCommentId) {
-        // 댓글 수정일 경우
         res = await fetch(`/api/comments/${editingCommentId}`, {
           method: 'PUT',
           headers: {
@@ -117,7 +122,6 @@ export default function TopicDetailPage() {
           body: JSON.stringify(newCommentData),
         })
       } else {
-        // 댓글 새로 작성일 경우
         res = await fetch('/api/comments', {
           method: 'POST',
           headers: {
@@ -131,15 +135,14 @@ export default function TopicDetailPage() {
         const data = await res.json()
         setComments((prev) => {
           if (editingCommentId) {
-            // 수정된 댓글이 있으면 그 댓글을 찾아서 덮어쓰기
             return prev.map((comment) =>
               comment._id === editingCommentId ? data : comment
             )
           }
-          return [data, ...prev] // 새 댓글은 맨 앞에 추가
+          return [data, ...prev]
         })
-        setNewComment('') // 입력 필드 초기화
-        setEditingCommentId(null) // 수정 모드 해제
+        setNewComment('')
+        setEditingCommentId(null)
       }
     } catch (error) {
       console.error('Error submitting comment:', error)
@@ -149,8 +152,8 @@ export default function TopicDetailPage() {
   const handleCommentEdit = (commentId: string) => {
     const commentToEdit = comments.find((c) => c._id === commentId)
     if (commentToEdit) {
-      setNewComment(commentToEdit.content) // 댓글 내용을 수정하기 위해 입력 필드에 채움
-      setEditingCommentId(commentId) // 수정하려는 댓글의 ID 저장
+      setNewComment(commentToEdit.content)
+      setEditingCommentId(commentId)
     }
   }
 
@@ -161,7 +164,7 @@ export default function TopicDetailPage() {
       })
 
       if (res.ok) {
-        setComments((prev) => prev.filter((c) => c._id !== commentId)) // 댓글 삭제
+        setComments((prev) => prev.filter((c) => c._id !== commentId))
       }
     } catch (error) {
       console.error('Error deleting comment:', error)
@@ -215,7 +218,12 @@ export default function TopicDetailPage() {
           {comments.map((comment) => (
             <div key={comment._id} className="border-b pb-2">
               <p className="text-gray-800">{comment.content}</p>
-              <p className="text-sm text-gray-500">{comment.userEmail}</p>
+              <p className="text-sm text-gray-500">
+                {comment.userEmail}
+                {comment.isSeller && (
+                  <span className="text-blue-500 ml-2">[판매자]</span>
+                )}
+              </p>
               {comment.userEmail === userEmail && (
                 <div className="mt-2 flex gap-2">
                   <button
