@@ -16,7 +16,7 @@ export default function Navbar() {
     <nav className="flex flex-col md:flex-row justify-between items-center bg-blue-500 px-8 py-4 shadow gap-4">
       {/* Logo */}
       <Link href="/" className="text-white text-lg font-bold">
-        Secondhand Trading
+        FinalTeamMarket
       </Link>
 
       {/* Search Bar */}

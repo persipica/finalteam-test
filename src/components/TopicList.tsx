@@ -42,7 +42,7 @@ export default function TopicLists() {
 
   if (loading) return <p>Loading topics...</p>
   if (error) return <p>Error: {error}</p>
-  if (topics.length === 0) return <p>No topics found</p>
+  if (topics.length === 0) return <p>등록된 상품이 없습니다...</p>
 
   return (
     <div className="container mx-auto my-8">
