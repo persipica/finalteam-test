@@ -23,6 +23,7 @@ export default function TopicLists() {
   const [selectedCategory, setSelectedCategory] = useState<string>('') // 선택된 카테고리
   const [priceSortOrder, setPriceSortOrder] = useState<string>('asc') // 가격 정렬 순서 (asc 또는 desc)
   const [dateSortOrder, setDateSortOrder] = useState<string>('desc') // 최신순/오래된순 정렬
+  const [searchQuery, setSearchQuery] = useState<string>('') // 검색어 상태
 
   useEffect(() => {
     async function fetchTopics() {
@@ -46,6 +47,15 @@ export default function TopicLists() {
   // 필터링 및 정렬
   const filteredTopics = topics
     .filter((topic) => {
+      // 검색어 필터
+      if (
+        searchQuery &&
+        !topic.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
+        return false
+      }
+
+      // 카테고리 필터
       if (selectedCategory && topic.category !== selectedCategory) {
         return false
       }
@@ -72,8 +82,8 @@ export default function TopicLists() {
 
   return (
     <div className="container mx-auto my-8">
-      {/* 필터 */}
-      <div className="flex justify-between items-center mb-6">
+      {/* 필터 및 검색 */}
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div>
           <label htmlFor="category" className="mr-2">
             카테고리:
@@ -123,9 +133,19 @@ export default function TopicLists() {
             <option value="asc">오래된순</option>
           </select>
         </div>
+
+        <div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="검색어를 입력하세요..."
+            className="border border-gray-300 rounded-md p-2 w-full sm:w-auto"
+          />
+        </div>
       </div>
 
-      {/* 상품이 없을 때도 필터는 계속 보이도록 */}
+      {/* 필터링된 결과 표시 */}
       {filteredTopics.length === 0 ? (
         <p>등록된 상품이 없습니다...</p>
       ) : (
@@ -135,7 +155,6 @@ export default function TopicLists() {
               key={topic._id}
               className="bg-white border border-gray-300 rounded-md shadow hover:shadow-lg p-4 transition"
             >
-              {/* 이미지 표시 */}
               <div className="relative h-48 w-full mb-4">
                 <Image
                   src={topic.image || '/default-avatar.png'} // 기본 이미지 사용
@@ -145,19 +164,16 @@ export default function TopicLists() {
                   className="rounded-md"
                 />
               </div>
-              {/* 제목 및 설명 */}
               <h3 className="text-lg font-bold text-gray-800 truncate">
                 {topic.title}
               </h3>
               <p className="text-sm text-gray-600 mt-2 truncate">
                 {topic.description}
               </p>
-              {/* 카테고리 표시 */}
               <p className="text-sm text-gray-500 mt-2">{topic.category}</p>
               <h3 className="text-lg font-bold text-gray-800 truncate mt-4">
                 {topic.price}원
               </h3>
-              {/* 상품 상세 페이지 링크 */}
               <Link href={`/detailTopic/${topic._id}`} passHref>
                 <button className="text-blue-600 mt-4">자세히 보기</button>
               </Link>

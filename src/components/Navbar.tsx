@@ -19,23 +19,7 @@ export default function Navbar() {
         FinalTeamMarket
       </Link>
 
-      {/* Search Bar */}
-      <div className="flex-grow max-w-md w-full">
-        <input
-          type="text"
-          placeholder="Search for products..."
-          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-300"
-        />
-      </div>
-
       {/* Navigation Links */}
-      <ul className="flex gap-4 items-center">
-        <li>
-          <Link href="/categories" className="text-white hover:underline">
-            Categories
-          </Link>
-        </li>
-      </ul>
 
       {/* User Actions */}
       <div className="flex gap-4 items-center">
