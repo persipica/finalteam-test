@@ -36,6 +36,7 @@ export default function TopicDetailPage() {
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalImage, setModalImage] = useState<string | null>(null)
+  const [isFavorite, setIsFavorite] = useState(false)
 
   const { data: session } = useSession()
   const userEmail = session?.user?.email
@@ -60,6 +61,18 @@ export default function TopicDetailPage() {
             isSeller: comment.userEmail === sellerEmail, // 댓글 작성자가 판매자인지 확인
           }))
         )
+
+        // 찜한 상품 여부 확인
+        const favoritesRes = await fetch(
+          `/api/favorites?userEmail=${userEmail}`
+        )
+        if (!favoritesRes.ok) throw new Error('Failed to fetch favorites')
+        const favorites = await favoritesRes.json()
+        const isProductFavorited = favorites.some(
+          (favorite: { topicId: { _id: string } }) =>
+            favorite.topicId._id === data._id
+        )
+        setIsFavorite(isProductFavorited)
 
         // 방문한 상품 정보 로컬 스토리지에 저장
         const visitedProducts = JSON.parse(
@@ -86,7 +99,7 @@ export default function TopicDetailPage() {
     }
 
     fetchTopic()
-  }, [id])
+  }, [id, userEmail])
 
   const handleImageClick = (image: string) => {
     setModalImage(image)
@@ -171,6 +184,34 @@ export default function TopicDetailPage() {
     }
   }
 
+  const handleAddToFavorites = async () => {
+    if (!userEmail || !topic) return
+
+    try {
+      const method = isFavorite ? 'DELETE' : 'POST'
+      const res = await fetch('/api/favorites', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ topicId: topic._id, userEmail }),
+      })
+
+      if (res.ok) {
+        setIsFavorite(!isFavorite)
+        alert(
+          isFavorite
+            ? '찜 목록에서 삭제되었습니다!'
+            : '찜 목록에 추가되었습니다!'
+        )
+      } else {
+        throw new Error('Failed to update favorite')
+      }
+    } catch (error) {
+      console.error('Error updating favorite:', error)
+    }
+  }
+
   if (loading) return <div>Loading...</div>
   if (!topic) return <div>상품을 찾을 수 없습니다.</div>
 
@@ -197,17 +238,30 @@ export default function TopicDetailPage() {
       <p className="text-xl font-bold text-gray-900 mb-6">{topic.price}원</p>
 
       <div className="flex gap-4">
-        {isOwner ? (
+        {!isOwner ? (
+          <>
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md"
+              onClick={() => alert('구매하기 기능')}
+            >
+              구매하기
+            </button>
+            <button
+              className={`py-2 px-4 rounded-md ${
+                isFavorite ? 'bg-red-600' : 'bg-gray-600'
+              } text-white`}
+              onClick={handleAddToFavorites}
+            >
+              {isFavorite ? '찜 목록에서 삭제' : '찜하기'}
+            </button>
+          </>
+        ) : (
           <>
             <Link href={`/editTopic/${topic._id}`} className="text-blue-600">
               <HiPencilAlt size={20} />
             </Link>
             <RemoveBtn id={id} />
           </>
-        ) : (
-          <button className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md">
-            구매하기
-          </button>
         )}
       </div>
 

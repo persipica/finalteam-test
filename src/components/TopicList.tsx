@@ -147,7 +147,7 @@ export default function TopicLists() {
 
       {/* 필터링된 결과 표시 */}
       {filteredTopics.length === 0 ? (
-        <p>등록된 상품이 없습니다...</p>
+        <p className="text-gray-500 mt-4">등록된 상품이 없습니다...</p>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {filteredTopics.map((topic) => (
